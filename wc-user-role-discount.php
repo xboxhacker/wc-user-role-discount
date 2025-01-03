@@ -2,8 +2,8 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.0.0
-Author: WIlliam Hare & Copilot
+Version: 1.1.0
+Author: William Hare & Copilot
 */
 
 // Add admin menu
@@ -64,8 +64,20 @@ function role_discount_settings_page() {
             submit_button();
             ?>
         </form>
+        <h2>Add New User Role</h2>
+        <form method="post" action="">
+            <?php wp_nonce_field('add_new_role_verify', 'add_new_role_nonce'); ?>
+            <label for="new_role_name">Role Name:</label>
+            <input type="text" id="new_role_name" name="new_role_name" required>
+            <label for="new_role_display_name">Display Name:</label>
+            <input type="text" id="new_role_display_name" name="new_role_display_name" required>
+            <input type="submit" name="add_new_role" value="Add Role">
+        </form>
     </div>
     <?php
+    if (isset($_POST['add_new_role'])) {
+        add_new_user_role();
+    }
 }
 
 // Apply discount based on user role
@@ -93,5 +105,24 @@ function role_discount_settings_security_check() {
         if (!isset($_POST['role_discount_nonce']) || !wp_verify_nonce($_POST['role_discount_nonce'], 'role_discount_options_verify')) {
             return;
         }
+    }
+}
+
+// Add new user role
+function add_new_user_role() {
+    if (!isset($_POST['add_new_role_nonce']) || !wp_verify_nonce($_POST['add_new_role_nonce'], 'add_new_role_verify')) {
+        return;
+    }
+
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $role_name = sanitize_text_field($_POST['new_role_name']);
+    $role_display_name = sanitize_text_field($_POST['new_role_display_name']);
+
+    if (!empty($role_name) && !empty($role_display_name)) {
+        add_role($role_name, $role_display_name);
+        update_option('role_discount_' . $role_name, 0);
     }
 }
