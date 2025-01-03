@@ -1,9 +1,9 @@
 <?php
 /*
-Plugin Name: WooCommerce Role-Based Discount
+Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.0
-Author: xboxhacker
+Version: 1.0.0
+Author: WIlliam Hare & Copilot
 */
 
 // Add admin menu
