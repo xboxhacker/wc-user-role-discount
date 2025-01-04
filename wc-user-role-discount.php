@@ -62,34 +62,21 @@ function role_discount_field_callback($args) {
 
 // Settings page
 function role_discount_settings_page() {
-    $roles = wp_roles()->roles;
     ?>
     <div class="wrap">
         <h1>Role-Based Discounts</h1>
         <form method="post" action="options.php">
-            <table style="width:100%">
-                <thead>
-                    <tr>
-                        <th>Role Name</th>
-                        <th>Discount Percentage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($roles as $role_key => $role) : ?>
-                        <tr>
-                            <td><?php echo esc_html($role['name']); ?></td>
-                            <td>
-                                <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="100" step="1" /> %
-                            </td>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <?php submit_button(); ?>
+            <?php
+            settings_fields('role_discount_options');
+            do_settings_sections('role-discounts');
+            wp_nonce_field('role_discount_options_verify', 'role_discount_nonce');
+            submit_button();
+            ?>
         </form>
     </div>
     <?php
 }
+
 // Manage user roles page
 function manage_user_roles_page() {
     $roles = wp_roles()->roles;
@@ -104,7 +91,7 @@ function manage_user_roles_page() {
         <h2>Current User Roles</h2>
         <form method="post" action="">
             <?php wp_nonce_field('delete_role_verify', 'delete_role_nonce'); ?>
-            <table style="width:20%">
+            <table>
                 <thead>
                     <tr>
                         <th>Role Name</th>
@@ -283,4 +270,3 @@ function clear_github_api_cache($upgrader_object, $options) {
         delete_site_transient('update_plugins');
     }
 }
-
