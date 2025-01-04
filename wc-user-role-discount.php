@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.2.2
+Version: 1.2.3
 Author: William Hare & Copilot
 */
 
@@ -61,6 +61,7 @@ function role_discount_field_callback($args) {
 
 // Settings page
 function role_discount_settings_page() {
+    $roles = wp_roles()->roles;
     ?>
     <div class="wrap">
         <h1>Role-Based Discounts</h1>
@@ -72,6 +73,23 @@ function role_discount_settings_page() {
             submit_button();
             ?>
         </form>
+        <h2>Current Discounts</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Role Name</th>
+                    <th>Discount Percentage</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($roles as $role_key => $role) : ?>
+                    <tr>
+                        <td><?php echo esc_html($role['name']); ?></td>
+                        <td><?php echo esc_html(get_option('role_discount_' . $role_key, '0')); ?>%</td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
     <?php
 }
