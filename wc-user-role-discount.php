@@ -70,11 +70,11 @@ function wc_user_role_discount_init() {
                         text-align: left;
                     }
                 </style>
-                <table style="width:20%">
+                <table style="width:30%">
                     <thead>
                         <tr>
-                            <th>Role Name</th>
-                            <th>Discount Percentage</th>
+                            <th style="width:30%">Role Name</th>
+                            <th style="width:30%">Discount Percentage</th>
                         </tr>
                     </thead>
                     <tbody>
