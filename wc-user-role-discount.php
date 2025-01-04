@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.2.6
+Version: 1.2.7
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-disocunt
 */
@@ -34,44 +34,44 @@ function role_discount_menu() {
 add_action('admin_init', 'role_discount_settings');
 
 function role_discount_settings() {
-    $roles = wp_roles()->roles;
-    foreach ($roles as $role_key => $role) {
-        register_setting('role_discount_options', 'role_discount_' . $role_key);
-        add_settings_section(
-            'role_discount_section_' . $role_key,
-            $role['name'] . ' Discount',
-            null,
-            'role-discounts'
-        );
-        add_settings_field(
-            'role_discount_' . $role_key,
-            'Discount Percentage',
-            'role_discount_field_callback',
-            'role-discounts',
-            'role_discount_section_' . $role_key,
-            ['role_key' => $role_key]
-        );
-    }
-}
-
-function role_discount_field_callback($args) {
-    $role_key = $args['role_key'];
-    $value = get_option('role_discount_' . $role_key, '');
-    echo '<input type="number" name="role_discount_' . $role_key . '" value="' . esc_attr($value) . '" min="0" max="100" step="1" /> %';
+    register_setting('role_discount_options', 'role_discount_options');
 }
 
 // Settings page
 function role_discount_settings_page() {
+    $roles = wp_roles()->roles;
     ?>
     <div class="wrap">
-        <h1>Role-Based Discounts</h1>
+        <h1>User Role-Based Discounts</h1>
         <form method="post" action="options.php">
             <?php
             settings_fields('role_discount_options');
-            do_settings_sections('role-discounts');
             wp_nonce_field('role_discount_options_verify', 'role_discount_nonce');
-            submit_button();
             ?>
+            <style>
+                th {
+                    text-align: left;
+                }
+            </style>
+            <table style="width:20%">
+                <thead>
+                    <tr>
+                        <th>Role Name</th>
+                        <th>Discount Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($roles as $role_key => $role) : ?>
+                        <tr>
+                            <td><?php echo esc_html($role['name']); ?></td>
+                            <td>
+                                <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="100" step="1" /> %
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php submit_button(); ?>
         </form>
     </div>
     <?php
@@ -85,13 +85,16 @@ function manage_user_roles_page() {
         table tr:nth-child(even) {
             background-color: #D6EEEE;
         }
+        th {
+            text-align: left;
+        }
     </style>
     <div class="wrap">
         <h1>Manage User Roles</h1>
         <h2>Current User Roles</h2>
         <form method="post" action="">
             <?php wp_nonce_field('delete_role_verify', 'delete_role_nonce'); ?>
-            <table>
+            <table style="width:20%">
                 <thead>
                     <tr>
                         <th>Role Name</th>
@@ -254,7 +257,7 @@ function github_plugin_information($false, $action, $response) {
 
     $response->slug = plugin_basename(__FILE__);
     $response->name = 'WooCommerce User Role Discount';
-    $response->version = '1.2.6';
+    $response->version = '1.2.7';
     $response->author = 'William Hare & Copilot';
     $response->homepage = 'https://github.com/xboxhacker/wc-user-role-disocunt';
     $response->download_link = 'https://github.com/xboxhacker/wc-user-role-disocunt/archive/refs/heads/main.zip';
