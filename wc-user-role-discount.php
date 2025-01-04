@@ -67,11 +67,6 @@ function role_discount_settings_page() {
     <div class="wrap">
         <h1>Role-Based Discounts</h1>
         <form method="post" action="options.php">
-            <?php
-            settings_fields('role_discount_options');
-            do_settings_sections('role-discounts');
-            wp_nonce_field('role_discount_options_verify', 'role_discount_nonce');
-            ?>
             <table style="width:100%">
                 <thead>
                     <tr>
@@ -288,3 +283,4 @@ function clear_github_api_cache($upgrader_object, $options) {
         delete_site_transient('update_plugins');
     }
 }
+
