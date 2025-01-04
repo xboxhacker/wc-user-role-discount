@@ -9,7 +9,11 @@ GitHub Plugin URI: xboxhacker/wc-user-role-disocunt
 
 // Ensure WordPress functions are available
 if (!function_exists('add_action')) {
+    error_log('Loading wp-load.php');
     require_once(dirname(__FILE__) . '/../../../../wp-load.php');
+    error_log('wp-load.php loaded');
+} else {
+    error_log('wp-load.php already loaded');
 }
 
 // Add admin menu
