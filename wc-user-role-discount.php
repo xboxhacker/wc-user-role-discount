@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.2.7
+Version: 1.2.8
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-disocunt
 */
@@ -34,7 +34,10 @@ function role_discount_menu() {
 add_action('admin_init', 'role_discount_settings');
 
 function role_discount_settings() {
-    register_setting('role_discount_options', 'role_discount_options');
+    $roles = wp_roles()->roles;
+    foreach ($roles as $role_key => $role) {
+        register_setting('role_discount_options', 'role_discount_' . $role_key);
+    }
 }
 
 // Settings page
@@ -42,10 +45,11 @@ function role_discount_settings_page() {
     $roles = wp_roles()->roles;
     ?>
     <div class="wrap">
-        <h1>User Role-Based Discounts</h1>
+        <h1>Role-Based Discounts</h1><br>
         <form method="post" action="options.php">
             <?php
             settings_fields('role_discount_options');
+            do_settings_sections('role-discounts');
             wp_nonce_field('role_discount_options_verify', 'role_discount_nonce');
             ?>
             <style>
@@ -91,14 +95,14 @@ function manage_user_roles_page() {
     </style>
     <div class="wrap">
         <h1>Manage User Roles</h1>
-        <h2>Current User Roles</h2>
+  <br>
         <form method="post" action="">
             <?php wp_nonce_field('delete_role_verify', 'delete_role_nonce'); ?>
             <table style="width:20%">
                 <thead>
                     <tr>
+                        <th>Display Name</th>
                         <th>Role Name</th>
-                        <th>Role Key</th>
                         <th>Delete</th>
                     </tr>
                 </thead>
@@ -116,9 +120,13 @@ function manage_user_roles_page() {
                     <?php endforeach; ?>
                 </tbody>
             </table>
+<br>
             <input type="submit" name="delete_role" value="Delete Selected Roles"
                    onclick="return confirm('Are you sure you want to delete the selected roles? This action cannot be undone.');">
         </form>
+<br>
+<hr style='width:100%'/>
+<br>
         <h2>Add New User Role</h2>
         <form method="post" action="">
             <?php wp_nonce_field('add_new_role_verify', 'add_new_role_nonce'); ?>
