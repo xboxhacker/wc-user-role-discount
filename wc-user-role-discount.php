@@ -7,6 +7,11 @@ Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-disocunt
 */
 
+// Ensure WordPress functions are available
+if (!function_exists('add_action')) {
+    require_once(dirname(__FILE__) . '/../../../../wp-load.php');
+}
+
 // Add admin menu
 add_action('admin_menu', 'role_discount_menu');
 
@@ -195,10 +200,12 @@ function add_new_user_role() {
 // Delete user role
 function delete_user_role() {
     if (!isset($_POST['delete_role_nonce']) || !wp_verify_nonce($_POST['delete_role_nonce'], 'delete_role_verify')) {
+        error_log('Nonce verification failed for role deletion.');
         return;
     }
 
     if (!current_user_can('manage_options')) {
+        error_log('User does not have permission to manage options.');
         return;
     }
 
@@ -216,9 +223,17 @@ function delete_user_role() {
                 } else {
                     echo '<script>alert("Role does not exist.");</script>';
                 }
+            } else {
+                error_log('Role name is empty.');
             }
         }
+    } else {
+        error_log('No roles selected for deletion.');
     }
+}
+
+if (isset($_POST['delete_role'])) {
+    delete_user_role();
 }
 
 // Add auto-update functionality
