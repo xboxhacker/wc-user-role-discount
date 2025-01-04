@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.2.0
+Version: 1.2.1
 Author: William Hare & Copilot
 */
 
@@ -21,19 +21,11 @@ function role_discount_menu() {
     );
     add_submenu_page(
         'role-discounts',
-        'Add New User Role',
-        'Add User Role',
+        'Manage User Roles',
+        'Manage User Roles',
         'manage_options',
-        'add-user-role',
-        'add_user_role_page'
-    );
-    add_submenu_page(
-        'role-discounts',
-        'Delete User Role',
-        'Delete User Role',
-        'manage_options',
-        'delete-user-role',
-        'delete_user_role_page'
+        'manage-user-roles',
+        'manage_user_roles_page'
     );
 }
 
@@ -84,11 +76,19 @@ function role_discount_settings_page() {
     <?php
 }
 
-// Add user role page
-function add_user_role_page() {
+// Manage user roles page
+function manage_user_roles_page() {
+    $roles = wp_roles()->roles;
     ?>
     <div class="wrap">
-        <h1>Add New User Role</h1>
+        <h1>Manage User Roles</h1>
+        <h2>Current User Roles</h2>
+        <ul>
+            <?php foreach ($roles as $role_key => $role) : ?>
+                <li><?php echo esc_html($role['name']); ?> (<?php echo esc_html($role_key); ?>)</li>
+            <?php endforeach; ?>
+        </ul>
+        <h2>Add New User Role</h2>
         <form method="post" action="">
             <?php wp_nonce_field('add_new_role_verify', 'add_new_role_nonce'); ?>
             <label for="new_role_name">Role Name:</label>
@@ -102,15 +102,7 @@ function add_user_role_page() {
             add_new_user_role();
         }
         ?>
-    </div>
-    <?php
-}
-
-// Delete user role page
-function delete_user_role_page() {
-    ?>
-    <div class="wrap">
-        <h1>Delete User Role</h1>
+        <h2>Delete User Role</h2>
         <form method="post" action="">
             <?php wp_nonce_field('delete_role_verify', 'delete_role_nonce'); ?>
             <label for="delete_role_name">Role Name:</label>
