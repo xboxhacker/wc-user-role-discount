@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.2.8
+Version: 1.3.0
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-disocunt
 */
@@ -63,6 +63,7 @@ function wc_user_role_discount_init() {
                 <?php
                 settings_fields('role_discount_options');
                 do_settings_sections('role-discounts');
+                wp_nonce_field('role_discount_settings_save', 'role_discount_nonce');
                 ?>
                 <style>
                     th {
@@ -81,7 +82,7 @@ function wc_user_role_discount_init() {
                             <tr>
                                 <td><?php echo esc_html($role['name']); ?></td>
                                 <td>
-                                    <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="100" step="1" /> %
+                                    <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="100">
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -109,6 +110,7 @@ function wc_user_role_discount_init() {
             <h1>Manage User Roles</h1>
             <br>
             <form method="post" action="">
+                <?php wp_nonce_field('manage_user_roles_action', 'manage_user_roles_nonce'); ?>
                 <table style="width:20%">
                     <thead>
                         <tr>
@@ -140,6 +142,7 @@ function wc_user_role_discount_init() {
             <br>
             <h2>Add New User Role</h2>
             <form method="post" action="">
+                <?php wp_nonce_field('add_new_role_action', 'add_new_role_nonce'); ?>
                 <label for="new_role_name">Role Name:</label>
                 <input type="text" id="new_role_name" name="new_role_name" required>
                 <label for="new_role_display_name">Display Name:</label>
@@ -148,7 +151,11 @@ function wc_user_role_discount_init() {
             </form>
             <?php
             if (isset($_POST['add_new_role'])) {
+                if (!isset($_POST['add_new_role_nonce']) || !wp_verify_nonce($_POST['add_new_role_nonce'], 'add_new_role_action')) {
+                    die('Security check failed');
+                }
                 add_new_user_role();
+                refresh_role_list(); // Refresh role list after adding a new role
             }
             ?>
         </div>
@@ -195,6 +202,10 @@ function wc_user_role_discount_init() {
         }
 
         if (isset($_POST['delete_roles'])) {
+            if (!isset($_POST['manage_user_roles_nonce']) || !wp_verify_nonce($_POST['manage_user_roles_nonce'], 'manage_user_roles_action')) {
+                die('Security check failed');
+            }
+
             foreach ($_POST['delete_roles'] as $role_name) {
                 if ($role_name === 'administrator') {
                     echo '<script>alert("Cannot delete the Administrator role.");</script>';
@@ -220,6 +231,11 @@ function wc_user_role_discount_init() {
     // Handle delete role action
     if (isset($_POST['delete_role'])) {
         delete_user_role();
+    }
+
+    // Function to refresh the role list
+    function refresh_role_list() {
+        echo '<script>location.reload();</script>';
     }
 
     // Auto-update functionality and other actions remain unchanged as they do not use wp_get_current_user()
