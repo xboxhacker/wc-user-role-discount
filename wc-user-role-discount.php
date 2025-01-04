@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.1.0
+Version: 1.2.0
 Author: William Hare & Copilot
 */
 
@@ -18,6 +18,22 @@ function role_discount_menu() {
         'role_discount_settings_page',
         'dashicons-admin-generic',
         20
+    );
+    add_submenu_page(
+        'role-discounts',
+        'Add New User Role',
+        'Add User Role',
+        'manage_options',
+        'add-user-role',
+        'add_user_role_page'
+    );
+    add_submenu_page(
+        'role-discounts',
+        'Delete User Role',
+        'Delete User Role',
+        'manage_options',
+        'delete-user-role',
+        'delete_user_role_page'
     );
 }
 
@@ -64,7 +80,15 @@ function role_discount_settings_page() {
             submit_button();
             ?>
         </form>
-        <h2>Add New User Role</h2>
+    </div>
+    <?php
+}
+
+// Add user role page
+function add_user_role_page() {
+    ?>
+    <div class="wrap">
+        <h1>Add New User Role</h1>
         <form method="post" action="">
             <?php wp_nonce_field('add_new_role_verify', 'add_new_role_nonce'); ?>
             <label for="new_role_name">Role Name:</label>
@@ -73,11 +97,34 @@ function role_discount_settings_page() {
             <input type="text" id="new_role_display_name" name="new_role_display_name" required>
             <input type="submit" name="add_new_role" value="Add Role">
         </form>
+        <?php
+        if (isset($_POST['add_new_role'])) {
+            add_new_user_role();
+        }
+        ?>
     </div>
     <?php
-    if (isset($_POST['add_new_role'])) {
-        add_new_user_role();
-    }
+}
+
+// Delete user role page
+function delete_user_role_page() {
+    ?>
+    <div class="wrap">
+        <h1>Delete User Role</h1>
+        <form method="post" action="">
+            <?php wp_nonce_field('delete_role_verify', 'delete_role_nonce'); ?>
+            <label for="delete_role_name">Role Name:</label>
+            <input type="text" id="delete_role_name" name="delete_role_name" required>
+            <input type="submit" name="delete_role" value="Delete Role"
+                   onclick="return confirm('Are you sure you want to delete this role? This action cannot be undone.');">
+        </form>
+        <?php
+        if (isset($_POST['delete_role'])) {
+            delete_user_role();
+        }
+        ?>
+    </div>
+    <?php
 }
 
 // Apply discount based on user role
@@ -124,5 +171,31 @@ function add_new_user_role() {
     if (!empty($role_name) && !empty($role_display_name)) {
         add_role($role_name, $role_display_name);
         update_option('role_discount_' . $role_name, 0);
+    }
+}
+
+// Delete user role
+function delete_user_role() {
+    if (!isset($_POST['delete_role_nonce']) || !wp_verify_nonce($_POST['delete_role_nonce'], 'delete_role_verify')) {
+        return;
+    }
+
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    $role_name = sanitize_text_field($_POST['delete_role_name']);
+    if ($role_name === 'administrator') {
+        echo '<script>alert("Cannot delete the Administrator role.");</script>';
+        return;
+    }
+
+    if (!empty($role_name)) {
+        if (get_role($role_name)) {
+            remove_role($role_name);
+            delete_option('role_discount_' . $role_name);
+        } else {
+            echo '<script>alert("Role does not exist.");</script>';
+        }
     }
 }
