@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.2.4
+Version: 1.2.5
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-disocunt
 */
@@ -62,7 +62,6 @@ function role_discount_field_callback($args) {
 
 // Settings page
 function role_discount_settings_page() {
-    $roles = wp_roles()->roles;
     ?>
     <div class="wrap">
         <h1>Role-Based Discounts</h1>
@@ -74,23 +73,6 @@ function role_discount_settings_page() {
             submit_button();
             ?>
         </form>
-        <h2>Current Discounts</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Role Name</th>
-                    <th>Discount Percentage</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($roles as $role_key => $role) : ?>
-                    <tr>
-                        <td><?php echo esc_html($role['name']); ?></td>
-                        <td><?php echo esc_html(get_option('role_discount_' . $role_key, '0')); ?>%</td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
     </div>
     <?php
 }
@@ -102,22 +84,33 @@ function manage_user_roles_page() {
     <div class="wrap">
         <h1>Manage User Roles</h1>
         <h2>Current User Roles</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Role Name</th>
-                    <th>Role Key</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($roles as $role_key => $role) : ?>
+        <form method="post" action="">
+            <?php wp_nonce_field('delete_role_verify', 'delete_role_nonce'); ?>
+            <table>
+                <thead>
                     <tr>
-                        <td><?php echo esc_html($role['name']); ?></td>
-                        <td><?php echo esc_html($role_key); ?></td>
+                        <th>Role Name</th>
+                        <th>Role Key</th>
+                        <th>Delete</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($roles as $role_key => $role) : ?>
+                        <tr>
+                            <td><?php echo esc_html($role['name']); ?></td>
+                            <td><?php echo esc_html($role_key); ?></td>
+                            <td>
+                                <?php if ($role_key !== 'administrator') : ?>
+                                    <input type="checkbox" name="delete_roles[]" value="<?php echo esc_attr($role_key); ?>">
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <input type="submit" name="delete_role" value="Delete Selected Roles"
+                   onclick="return confirm('Are you sure you want to delete the selected roles? This action cannot be undone.');">
+        </form>
         <h2>Add New User Role</h2>
         <form method="post" action="">
             <?php wp_nonce_field('add_new_role_verify', 'add_new_role_nonce'); ?>
@@ -130,19 +123,6 @@ function manage_user_roles_page() {
         <?php
         if (isset($_POST['add_new_role'])) {
             add_new_user_role();
-        }
-        ?>
-        <h2>Delete User Role</h2>
-        <form method="post" action="">
-            <?php wp_nonce_field('delete_role_verify', 'delete_role_nonce'); ?>
-            <label for="delete_role_name">Role Name:</label>
-            <input type="text" id="delete_role_name" name="delete_role_name" required>
-            <input type="submit" name="delete_role" value="Delete Role"
-                   onclick="return confirm('Are you sure you want to delete this role? This action cannot be undone.');">
-        </form>
-        <?php
-        if (isset($_POST['delete_role'])) {
-            delete_user_role();
         }
         ?>
     </div>
@@ -206,18 +186,21 @@ function delete_user_role() {
         return;
     }
 
-    $role_name = sanitize_text_field($_POST['delete_role_name']);
-    if ($role_name === 'administrator') {
-        echo '<script>alert("Cannot delete the Administrator role.");</script>';
-        return;
-    }
+    if (isset($_POST['delete_roles'])) {
+        foreach ($_POST['delete_roles'] as $role_name) {
+            if ($role_name === 'administrator') {
+                echo '<script>alert("Cannot delete the Administrator role.");</script>';
+                continue;
+            }
 
-    if (!empty($role_name)) {
-        if (get_role($role_name)) {
-            remove_role($role_name);
-            delete_option('role_discount_' . $role_name);
-        } else {
-            echo '<script>alert("Role does not exist.");</script>';
+            if (!empty($role_name)) {
+                if (get_role($role_name)) {
+                    remove_role($role_name);
+                    delete_option('role_discount_' . $role_name);
+                } else {
+                    echo '<script>alert("Role does not exist.");</script>';
+                }
+            }
         }
     }
 }
@@ -266,7 +249,7 @@ function github_plugin_information($false, $action, $response) {
 
     $response->slug = plugin_basename(__FILE__);
     $response->name = 'WooCommerce User Role Discount';
-    $response->version = '1.2.4';
+    $response->version = '1.2.5';
     $response->author = 'William Hare & Copilot';
     $response->homepage = 'https://github.com/xboxhacker/wc-user-role-disocunt';
     $response->download_link = 'https://github.com/xboxhacker/wc-user-role-disocunt/archive/refs/heads/main.zip';
