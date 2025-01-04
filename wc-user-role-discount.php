@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.2.1
+Version: 1.2.2
 Author: William Hare & Copilot
 */
 
@@ -83,11 +83,22 @@ function manage_user_roles_page() {
     <div class="wrap">
         <h1>Manage User Roles</h1>
         <h2>Current User Roles</h2>
-        <ul>
-            <?php foreach ($roles as $role_key => $role) : ?>
-                <li><?php echo esc_html($role['name']); ?> (<?php echo esc_html($role_key); ?>)</li>
-            <?php endforeach; ?>
-        </ul>
+        <table>
+            <thead>
+                <tr>
+                    <th>Role Name</th>
+                    <th>Role Key</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($roles as $role_key => $role) : ?>
+                    <tr>
+                        <td><?php echo esc_html($role['name']); ?></td>
+                        <td><?php echo esc_html($role_key); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
         <h2>Add New User Role</h2>
         <form method="post" action="">
             <?php wp_nonce_field('add_new_role_verify', 'add_new_role_nonce'); ?>
