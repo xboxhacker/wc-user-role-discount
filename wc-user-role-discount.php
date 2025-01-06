@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.6.3
+Version: 1.6.5
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-discount
 */
@@ -248,5 +248,69 @@ function delete_all_discounts() {
     function refresh_role_list() {
         echo '<script>location.reload();</script>';
     }
+// Auto-update functionality
+add_filter('pre_set_site_transient_update_plugins', 'github_plugin_update_check');
+add_filter('plugins_api', 'github_plugin_information', 20, 3);
+add_action('upgrader_process_complete', 'clear_github_api_cache', 10, 2);
 
+function github_plugin_update_check($transient) {
+    if (empty($transient->checked)) {
+        return $transient;
+    }
+
+    $plugin_slug = plugin_basename(__FILE__);
+    $plugin_data = get_plugin_data(__FILE__);
+    $current_version = $plugin_data['Version'];
+
+    $remote_version = get_remote_version();
+    if (version_compare($current_version, $remote_version, '<')) {
+        $response = new stdClass();
+        $response->new_version = $remote_version;
+        $response->slug = $plugin_slug;
+        $response->url = 'https://github.com/xboxhacker/wc-user-role-discount';
+        $response->package = 'https://github.com/xboxhacker/wc-user-role-discount/archive/refs/heads/main.zip';
+        $transient->response[$plugin_slug] = $response;
+    }
+
+    return $transient;
+}
+
+function github_plugin_information($false, $action, $response) {
+    if ($response->slug !== plugin_basename(__FILE__)) {
+        return false;
+    }
+
+    $response->name = 'WooCommerce User Role Discount';
+    $response->slug = 'wc-user-role-discount';
+    $response->version = get_remote_version();
+    $response->tested = '5.8';
+    $response->requires = '5.0';
+    $response->author = 'William Hare & Copilot';
+    $response->homepage = 'https://github.com/xboxhacker/wc-user-role-discount';
+    $response->download_link = 'https://github.com/xboxhacker/wc-user-role-discount/archive/refs/heads/main.zip';
+
+    $response->sections = array(
+        'description' => 'Apply a percentage discount for WooCommerce cart based on user roles.',
+    );
+
+    return $response;
+}
+
+function clear_github_api_cache($upgrader_object, $options) {
+    if ($options['action'] === 'update' && $options['type'] === 'plugin') {
+        delete_transient('github_plugin_version');
+    }
+}
+
+function get_remote_version() {
+    $remote_version = get_transient('github_plugin_version');
+    if ($remote_version === false) {
+        $request = wp_remote_get('https://raw.githubusercontent.com/xboxhacker/wc-user-role-discount/main/version.txt');
+        if (!is_wp_error($request) || wp_remote_retrieve_response_code($request) === 200) {
+            $remote_version = wp_remote_retrieve_body($request);
+            set_transient('github_plugin_version', $remote_version, DAY_IN_SECONDS);
+        }
+    }
+    return $remote_version;
+}
     }
