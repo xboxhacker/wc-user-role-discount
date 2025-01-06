@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.6.0
+Version: 1.6.3
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-discount
 */
