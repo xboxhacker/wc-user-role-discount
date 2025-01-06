@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.4.0
+Version: 1.5.0
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-disocunt
 */
@@ -156,19 +156,21 @@ function wc_user_role_discount_init() {
     // Apply discount based on user role
     add_action('woocommerce_cart_calculate_fees', 'apply_role_discount');
 
-    function apply_role_discount() {
-        if (is_admin() && !defined('DOING_AJAX')) return;
+ function apply_role_discount() {
+    if (is_admin() && !defined('DOING_AJAX')) return;
 
-        $user = wp_get_current_user();
-        $roles = $user->roles;
-        foreach ($roles as $role) {
-            $discount = get_option('role_discount_' . $role, 0);
-            if ($discount > 0) {
-                $discount_amount = WC()->cart->get_subtotal() * ($discount / 100);
-                WC()->cart->add_fee(ucfirst($role) . ' Discount', -$discount_amount);
-            }
+    if (current_user_can('install_plugins')) return; // Prevent discount application during plugin installation
+
+    $user = wp_get_current_user();
+    $roles = $user->roles;
+    foreach ($roles as $role) {
+        $discount = get_option('role_discount_' . $role, 0);
+        if ($discount > 0) {
+            $discount_amount = WC()->cart->get_subtotal() * ($discount / 100);
+            WC()->cart->add_fee(ucfirst($role) . ' Discount', -$discount_amount);
         }
     }
+}
 
     // Add new user role
     function add_new_user_role() {
