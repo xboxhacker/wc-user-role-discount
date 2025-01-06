@@ -54,7 +54,6 @@ function wc_user_role_discount_init() {
                 <?php
                 settings_fields('role_discount_options');
                 do_settings_sections('role-discounts');
-                wp_nonce_field('role_discount_settings_save', 'role_discount_nonce');
                 ?>
                 <style>
                     th {
@@ -73,7 +72,7 @@ function wc_user_role_discount_init() {
                             <tr>
                                 <td><?php echo esc_html($role['name']); ?></td>
                                 <td>
-                                    <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" m[...]
+                                    <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="100">
                                 </td>
                             </tr>
                         <?php endforeach; ?>
@@ -101,7 +100,6 @@ function wc_user_role_discount_init() {
             <h1>Manage User Roles</h1>
             <br>
             <form method="post" action="">
-                <?php wp_nonce_field('manage_user_roles_action', 'manage_user_roles_nonce'); ?>
                 <table style="width:20%">
                     <thead>
                         <tr>
@@ -133,7 +131,6 @@ function wc_user_role_discount_init() {
             <br>
             <h2>Add New User Role</h2>
             <form method="post" action="">
-                <?php wp_nonce_field('add_new_role_action', 'add_new_role_nonce'); ?>
                 <label for="new_role_name">Role Name:</label>
                 <input type="text" id="new_role_name" name="new_role_name" required>
                 <label for="new_role_display_name">Display Name:</label>
@@ -142,9 +139,6 @@ function wc_user_role_discount_init() {
             </form>
             <?php
             if (isset($_POST['add_new_role'])) {
-                if (!isset($_POST['add_new_role_nonce']) || !wp_verify_nonce($_POST['add_new_role_nonce'], 'add_new_role_action')) {
-                    die('Security check failed');
-                }
                 add_new_user_role();
                 refresh_role_list(); // Refresh role list after adding a new role
             }
@@ -156,29 +150,29 @@ function wc_user_role_discount_init() {
     // Apply discount based on user role
     add_action('woocommerce_cart_calculate_fees', 'apply_role_discount');
 
-function apply_role_discount() {
-    if (is_admin() && !defined('DOING_AJAX')) {
-        error_log('apply_role_discount: Admin area or AJAX request, exiting.');
-        return;
-    }
+    function apply_role_discount() {
+        if (is_admin() && !defined('DOING_AJAX')) {
+            error_log('apply_role_discount: Admin area or AJAX request, exiting.');
+            return;
+        }
 
-    // Prevent discount application during plugin installation and other admin tasks
-    if (current_user_can('install_plugins') || current_user_can('activate_plugins') || current_user_can('update_plugins')) {
-        error_log('apply_role_discount: User can install/activate/update plugins, exiting.');
-        return;
-    }
+        // Prevent discount application during plugin installation and other admin tasks
+        if (current_user_can('install_plugins') || current_user_can('activate_plugins') || current_user_can('update_plugins')) {
+            error_log('apply_role_discount: User can install/activate/update plugins, exiting.');
+            return;
+        }
 
-    $user = wp_get_current_user();
-    $roles = $user->roles;
-    foreach ($roles as $role) {
-        $discount = get_option('role_discount_' . $role, 0);
-        if ($discount > 0) {
-            $discount_amount = WC()->cart->get_subtotal() * ($discount / 100);
-            WC()->cart->add_fee(ucfirst($role) . ' Discount', -$discount_amount);
-            error_log('apply_role_discount: Applied ' . $discount . '% discount for role ' . $role);
+        $user = wp_get_current_user();
+        $roles = $user->roles;
+        foreach ($roles as $role) {
+            $discount = get_option('role_discount_' . $role, 0);
+            if ($discount > 0) {
+                $discount_amount = WC()->cart->get_subtotal() * ($discount / 100);
+                WC()->cart->add_fee(ucfirst($role) . ' Discount', -$discount_amount);
+                error_log('apply_role_discount: Applied ' . $discount . '% discount for role ' . $role);
+            }
         }
     }
-}
 
     // Add new user role
     function add_new_user_role() {
@@ -203,10 +197,6 @@ function apply_role_discount() {
         }
 
         if (isset($_POST['delete_roles'])) {
-            if (!isset($_POST['manage_user_roles_nonce']) || !wp_verify_nonce($_POST['manage_user_roles_nonce'], 'manage_user_roles_action')) {
-                die('Security check failed');
-            }
-
             foreach ($_POST['delete_roles'] as $role_name) {
                 if ($role_name === 'administrator') {
                     echo '<script>alert("Cannot delete the Administrator role.");</script>';
