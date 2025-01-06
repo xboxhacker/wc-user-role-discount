@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.6.0
+Version: 1.6.1
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-discount
 */
@@ -45,45 +45,59 @@ function wc_user_role_discount_init() {
     }
 
     // Settings page
-    function role_discount_settings_page() {
-        $roles = wp_roles()->roles;
-        ?>
-        <div class="wrap">
-            <h1>Role-Based Discounts</h1><br>
-            <form method="post" action="options.php">
-                <?php
-                settings_fields('role_discount_options');
-                do_settings_sections('role-discounts');
-                ?>
-                <style>
-                    th {
-                        text-align: left;
-                    }
-                </style>
-                <table style="width:30%">
-                    <thead>
+function role_discount_settings_page() {
+    $roles = wp_roles()->roles;
+    ?>
+    <div class="wrap">
+        <h1>Role-Based Discounts</h1><br>
+        <form method="post" action="options.php">
+            <?php
+            settings_fields('role_discount_options');
+            do_settings_sections('role-discounts');
+            ?>
+            <style>
+                th {
+                    text-align: left;
+                }
+            </style>
+            <table style="width:30%">
+                <thead>
+                    <tr>
+                        <th style="width:30%">Role Name</th>
+                        <th style="width:30%">Discount Percentage</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($roles as $role_key => $role) : ?>
                         <tr>
-                            <th style="width:30%">Role Name</th>
-                            <th style="width:30%">Discount Percentage</th>
+                            <td><?php echo esc_html($role['name']); ?></td>
+                            <td>
+                                <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="100">
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($roles as $role_key => $role) : ?>
-                            <tr>
-                                <td><?php echo esc_html($role['name']); ?></td>
-                                <td>
-                                    <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="100">
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                <?php submit_button(); ?>
-            </form>
-        </div>
-        <?php
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php submit_button(); ?>
+        </form>
+        <form method="post" action="">
+            <input type="hidden" name="delete_discounts" value="1">
+            <?php submit_button('Delete All Discounts'); ?>
+        </form>
+    </div>
+    <?php
+    if (isset($_POST['delete_discounts'])) {
+        delete_all_discounts();
     }
+}
 
+function delete_all_discounts() {
+    $roles = wp_roles()->roles;
+    foreach ($roles as $role_key => $role) {
+        delete_option('role_discount_' . $role_key);
+    }
+    echo '<div id="message" class="updated notice is-dismissible"><p>All discounts have been deleted.</p></div>';
+}
     // Manage user roles page
     function manage_user_roles_page() {
         $roles = wp_roles()->roles;
@@ -150,30 +164,32 @@ function wc_user_role_discount_init() {
     // Apply discount based on user role
     add_action('woocommerce_cart_calculate_fees', 'apply_role_discount');
 
-    function apply_role_discount() {
-        if (is_admin() && !defined('DOING_AJAX')) {
-            error_log('apply_role_discount: Admin area or AJAX request, exiting.');
-            return;
-        }
-
-        // Prevent discount application during plugin installation and other admin tasks
-        if (current_user_can('install_plugins') || current_user_can('activate_plugins') || current_user_can('update_plugins')) {
-            error_log('apply_role_discount: User can install/activate/update plugins, exiting.');
-            return;
-        }
-
-        $user = wp_get_current_user();
-        $roles = $user->roles;
-        foreach ($roles as $role) {
-            $discount = get_option('role_discount_' . $role, 0);
-            if ($discount > 0) {
-                $discount_amount = WC()->cart->get_subtotal() * ($discount / 100);
-                WC()->cart->add_fee(ucfirst($role) . ' Discount', -$discount_amount);
-                error_log('apply_role_discount: Applied ' . $discount . '% discount for role ' . $role);
-            }
-        }
+   function apply_role_discount() {
+    if (is_admin() && !defined('DOING_AJAX')) {
+        error_log('apply_role_discount: Admin area or AJAX request, exiting.');
+        return;
     }
 
+    // Prevent discount application during plugin installation and other admin tasks
+    if (current_user_can('install_plugins') || current_user_can('activate_plugins') || current_user_can('update_plugins')) {
+        error_log('apply_role_discount: User can install/activate/update plugins, exiting.');
+        return;
+    }
+
+    $user = wp_get_current_user();
+    $roles = $user->roles;
+    foreach ($roles as $role) {
+        if ($role === 'administrator') {
+            continue; // Skip administrators
+        }
+        $discount = get_option('role_discount_' . $role, 0);
+        if ($discount > 0) {
+            $discount_amount = WC()->cart->get_subtotal() * ($discount / 100);
+            WC()->cart->add_fee(ucfirst($role) . ' Discount', -$discount_amount);
+            error_log('apply_role_discount: Applied ' . $discount . '% discount for role ' . $role);
+        }
+    }
+}
     // Add new user role
     function add_new_user_role() {
         if (!current_user_can('manage_options')) {
