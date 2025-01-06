@@ -2,7 +2,7 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.6.1
+Version: 1.6.0
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-discount
 */
@@ -81,12 +81,16 @@ function role_discount_settings_page() {
             <?php submit_button(); ?>
         </form>
         <form method="post" action="">
+            <?php wp_nonce_field('delete_discounts_action', 'delete_discounts_nonce'); ?>
             <input type="hidden" name="delete_discounts" value="1">
             <?php submit_button('Delete All Discounts'); ?>
         </form>
     </div>
     <?php
     if (isset($_POST['delete_discounts'])) {
+        if (!isset($_POST['delete_discounts_nonce']) || !wp_verify_nonce($_POST['delete_discounts_nonce'], 'delete_discounts_action')) {
+            die('Security check failed');
+        }
         delete_all_discounts();
     }
 }
@@ -245,21 +249,4 @@ function delete_all_discounts() {
         echo '<script>location.reload();</script>';
     }
 
-    // Auto-update functionality and other actions remain unchanged as they do not use wp_get_current_user()
-    add_filter('pre_set_site_transient_update_plugins', 'github_plugin_update_check');
-    add_filter('plugins_api', 'github_plugin_information', 20, 3);
-    add_action('upgrader_process_complete', 'clear_github_api_cache', 10, 2);
-}
-
-// The following functions should be defined outside the plugins_loaded hook if they are to be used elsewhere
-function github_plugin_update_check($transient) {
-    // ... (rest of the function remains unchanged)
-}
-
-function github_plugin_information($false, $action, $response) {
-    // ... (rest of the function remains unchanged)
-}
-
-function clear_github_api_cache($upgrader_object, $options) {
-    // ... (rest of the function remains unchanged)
-}
+    }
