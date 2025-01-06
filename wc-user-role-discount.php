@@ -156,10 +156,11 @@ function wc_user_role_discount_init() {
     // Apply discount based on user role
     add_action('woocommerce_cart_calculate_fees', 'apply_role_discount');
 
- function apply_role_discount() {
+function apply_role_discount() {
     if (is_admin() && !defined('DOING_AJAX')) return;
 
-    if (current_user_can('install_plugins')) return; // Prevent discount application during plugin installation
+    // Prevent discount application during plugin installation and other admin tasks
+    if (current_user_can('install_plugins') || current_user_can('activate_plugins') || current_user_can('update_plugins')) return;
 
     $user = wp_get_current_user();
     $roles = $user->roles;
