@@ -38,13 +38,7 @@ The WooCommerce User Role Discount plugin allows you to apply a percentage-based
 
 The plugin automatically applies the specified discount percentage to the cart's subtotal based on the user's role.
 
-## Contributing
-
-1. Fork the repository.
-2. Create a new branch for your feature or bugfix.
-3. Make your changes and commit them with clear and concise messages.
-4. Push your changes to your forked repository.
-5. Create a pull request to the main repository.
+~Current Version:1.6.5~
 
 ## Support
 
