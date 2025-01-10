@@ -283,8 +283,8 @@ function github_plugin_information($false, $action, $response) {
     $response->name = 'WooCommerce User Role Discount';
     $response->slug = 'wc-user-role-discount';
     $response->version = get_remote_version();
-    $response->tested = '5.8';
-    $response->requires = '5.0';
+    $response->tested = '6.7.1';
+    $response->requires = '6.0';
     $response->author = 'William Hare & Copilot';
     $response->homepage = 'https://github.com/xboxhacker/wc-user-role-discount';
     $response->download_link = 'https://github.com/xboxhacker/wc-user-role-discount/archive/refs/heads/main.zip';
