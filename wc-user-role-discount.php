@@ -2,13 +2,21 @@
 /*
 Plugin Name: WooCommerce User Role Discount
 Description: Apply a percentage discount for WooCommerce cart based on user roles.
-Version: 1.6.6
+Version: 1.6.7
 Author: William Hare & Copilot
 GitHub Plugin URI: xboxhacker/wc-user-role-discount
 */
 
 // Use plugins_loaded hook to ensure WordPress is fully loaded
 add_action('plugins_loaded', 'wc_user_role_discount_init');
+
+// Activation hook to ensure the plugin is activated after an update
+register_activation_hook(__FILE__, 'wc_user_role_discount_activate');
+
+function wc_user_role_discount_activate() {
+    // Ensure the plugin is properly activated
+    wc_user_role_discount_init();
+}
 
 function wc_user_role_discount_init() {
     // Add admin menu
@@ -45,63 +53,64 @@ function wc_user_role_discount_init() {
     }
 
     // Settings page
-function role_discount_settings_page() {
-    $roles = wp_roles()->roles;
-    ?>
-    <div class="wrap">
-        <h1>Role-Based Discounts</h1><br>
-        <form method="post" action="options.php">
-            <?php
-            settings_fields('role_discount_options');
-            do_settings_sections('role-discounts');
-            ?>
-            <style>
-                th {
-                    text-align: left;
-                }
-            </style>
-            <table style="width:30%">
-                <thead>
-                    <tr>
-                        <th style="width:30%">Role Name</th>
-                        <th style="width:30%">Discount Percentage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($roles as $role_key => $role) : ?>
+    function role_discount_settings_page() {
+        $roles = wp_roles()->roles;
+        ?>
+        <div class="wrap">
+            <h1>Role-Based Discounts</h1><br>
+            <form method="post" action="options.php">
+                <?php
+                settings_fields('role_discount_options');
+                do_settings_sections('role-discounts');
+                ?>
+                <style>
+                    th {
+                        text-align: left;
+                    }
+                </style>
+                <table style="width:30%">
+                    <thead>
                         <tr>
-                            <td><?php echo esc_html($role['name']); ?></td>
-                            <td>
-                                <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="100">
-                            </td>
+                            <th style="width:30%">Role Name</th>
+                            <th style="width:30%">Discount Percentage</th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-            <?php submit_button(); ?>
-        </form>
-        <form method="post" action="">
-            <?php wp_nonce_field('delete_discounts_action', 'delete_discounts_nonce'); ?>
-            <input type="hidden" name="delete_discounts" value="1">
-            <?php submit_button('Delete All Discounts'); ?>
-        </form>
-    </div>
-    <?php
-    if (isset($_POST['delete_discounts'])) {
-        if (!isset($_POST['delete_discounts_nonce']) || !wp_verify_nonce($_POST['delete_discounts_nonce'], 'delete_discounts_action')) {
-            die('Security check failed');
+                    </thead>
+                    <tbody>
+                        <?php foreach ($roles as $role_key => $role) : ?>
+                            <tr>
+                                <td><?php echo esc_html($role['name']); ?></td>
+                                <td>
+                                    <input type="number" name="role_discount_<?php echo esc_attr($role_key); ?>" value="<?php echo esc_attr(get_option('role_discount_' . $role_key, '')); ?>" min="0" max="[...]
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+                <?php submit_button(); ?>
+            </form>
+            <form method="post" action="">
+                <?php wp_nonce_field('delete_discounts_action', 'delete_discounts_nonce'); ?>
+                <input type="hidden" name="delete_discounts" value="1">
+                <?php submit_button('Delete All Discounts'); ?>
+            </form>
+        </div>
+        <?php
+        if (isset($_POST['delete_discounts'])) {
+            if (!isset($_POST['delete_discounts_nonce']) || !wp_verify_nonce($_POST['delete_discounts_nonce'], 'delete_discounts_action')) {
+                die('Security check failed');
+            }
+            delete_all_discounts();
         }
-        delete_all_discounts();
     }
-}
 
-function delete_all_discounts() {
-    $roles = wp_roles()->roles;
-    foreach ($roles as $role_key => $role) {
-        delete_option('role_discount_' . $role_key);
+    function delete_all_discounts() {
+        $roles = wp_roles()->roles;
+        foreach ($roles as $role_key => $role) {
+            delete_option('role_discount_' . $role_key);
+        }
+        echo '<div id="message" class="updated notice is-dismissible"><p>All discounts have been deleted.</p></div>';
     }
-    echo '<div id="message" class="updated notice is-dismissible"><p>All discounts have been deleted.</p></div>';
-}
+
     // Manage user roles page
     function manage_user_roles_page() {
         $roles = wp_roles()->roles;
