@@ -3,7 +3,7 @@
 Plugin Name: WooCommerce User Role Discount
 Plugin URI: https://github.com/xboxhacker/wc-user-role-discount
 Description: Woocommerce discount for specific user roles.
-Version: 1.7.0
+Version: 1.7.1
 Author: William Hare & Copilot
 Author URI: https://github.com/xboxhacker
 License: GPL2
@@ -116,6 +116,15 @@ function role_discount_options_page() {
 add_action('admin_init', 'role_discount_settings');
 
 function role_discount_settings() {
+    // Add a section so the page isn't blank!
+    add_settings_section(
+        'role_discount_section',
+        __('Role Discount Settings', 'wc-user-role-discount'),
+        function () {
+            echo '<p>' . __('Set discount percentages by user role.', 'wc-user-role-discount') . '</p>';
+        },
+        'role_discount_options'
+    );
     $roles = get_editable_roles();
     foreach ($roles as $role_name => $role_info) {
         register_setting('role_discount_options', 'role_discount_' . $role_name);
@@ -124,7 +133,7 @@ function role_discount_settings() {
             $role_info['name'],
             'role_discount_field_callback',
             'role_discount_options',
-            'default',
+            'role_discount_section',
             array('role_name' => $role_name)
         );
     }
